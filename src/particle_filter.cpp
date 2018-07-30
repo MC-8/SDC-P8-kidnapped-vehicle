@@ -54,6 +54,28 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+	std::default_random_engine generator;
+
+	for (int i = 0; i < num_particles; ++i)
+	{
+		if (abs(yaw_rate) > 1e-9) // non-zero yaw rate
+		{
+			particles[i].x += delta_t * velocity / yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
+			particles[i].y += delta_t * velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
+		}
+		else
+		{
+			particles[i].x += delta_t * velocity * sin(particles[i].theta);
+			particles[i].y += delta_t * velocity * cos(particles[i].theta);
+		}
+		particles[i].theta += delta_t * yaw_rate;
+
+		std::normal_distribution<double> distribution_x(particles[i].x, std_pos[0]);
+		std::normal_distribution<double> distribution_y(particles[i].y, std_pos[1]);
+
+		particles[i].x += distribution_x(generator);
+		particles[i].y += distribution_y(generator);
+	}
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs> &observations)
@@ -62,6 +84,23 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	//   observed measurement to this particular landmark.
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
 	//   implement this method and use it as a helper during the updateWeights phase.
+	for (int i_obs = 0; i_obs < observations.size(); ++i_obs)
+	{
+		double distance = 1e300;
+		for (int i_pred = 0; i_pred < predicted.size(); ++i_pred)
+		{
+			double temp_dist = dist(predicted[i_pred].x, observations[i_obs].x, predicted[i_pred].y, observations[i_obs].y);
+			if (temp_dist < distance)
+			{
+				distance = temp_dist;
+				observations[i_obs].id = predicted[i_pred].id;
+			}
+		}
+		if (distance > 1e299)
+		{
+			printf("\nSomething may be wrong with ParticleFilter::dataAssociation. Could not find nearest point.");
+		}
+	}
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
