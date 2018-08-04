@@ -9,7 +9,7 @@ In this project I implemented a 2 dimensional particle filter in C++. This parti
 [success]:   ./success.png
 
 ## Brief description of functions
-The code I modified is in src/particle_filter.cpp.
+The code was developed by Udacity and I modified src/particle_filter.cpp to implement the particle filter.
 In ```ParticleFilter::init``` I initialize the particles (I found that 500 particles yield good accuracy and speed) with weight of 1 and an initial position randomly distributed around the given x-y coordinates. This way, all the 500 Particles are in the vicinity of the vehicle (assuming a reasonably precise GPS) rather than all over the map.
 
 In ```ParticleFilter::prediction``` each particle moves using a kinematic bicycle model, with velocity and yaw_rate measurements as they would come from a noisy sensor, in addition gaussian noise is added to simulate the model uncertainty.
@@ -19,8 +19,10 @@ In ```ParticleFilter::dataAssociation``` I associate landmarks with observations
 In ```ParticleFilter::updateWeights``` (The meat of the algorithm) I update particle weights based on how accurately the particle represent the vehicle, by using the observations coming from the sensors. 
 Weights are calculated as the product of probability distributions depending on observations/landmark: matched observations closer to the real landmark will produce a high probability, hence a higher weight. The product of each individual probability gives the total particle weight.
 The final result is that the particle with the highest weight is the best candidate to approximate the position of the vehicle.
-The ```main.cpp``` takes care of the resampling step, that weeds-out over time particles with low weight and increase the importance of particles with higher weight (essentially from a bucket of 500 particles we have after many iterations still 500 particles, but many are instances of the same high-weight particles).
-This is then proved using the simulator previously described, which automatically detects if the accuracy is high enough to "pass" the detection, and the project objective. Also, the algorithm should be efficient enough to take less than 100seconds to fully complete the simulation.
+
+The ```main.cpp``` takes care of the resampling step, that weeds-out over time particles with low weight and increase the importance of particles with higher weight (essentially from a bucket of 500 particles we have after many iterations still 500 particles, but many are instances of the same high-weight particles). The resampling routine is in ```ParticleFilter::resample```.
+This is then proved using the simulator previously described, which automatically detects if the accuracy is high enough to "pass" the detection, and the project objective. Also, the algorithm should be efficient enough to take less than 100seconds to fully complete the simulation. The simulator shows the best particle position, represented as blue circle that ideally overlaps with the car which is the ground truth. Smaller circles are landmarks and green lines represent the observation vectors coming from the sensors.
+
 ![alt text][success]
 
 
